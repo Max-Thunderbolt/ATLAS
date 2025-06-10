@@ -15,18 +15,30 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
+def getSystemPrompt():
+    ## Pull all text from personality.txt
+    with open('personality.txt', 'r', encoding='utf-8') as file:
+        return file.read()
+
 class PromptRequest(BaseModel):
     prompt: str
+    system_prompt: str = getSystemPrompt()
 
 @app.post("/chat")
 async def chat_with_gemma(request: PromptRequest):
+    print("System prompt: ", request.system_prompt)
     try:
         # Assuming Ollama is running on the default host and port (http://localhost:11434)
-        response = ollama.chat(model='gemma2:2b', messages=[{'role': 'user', 'content': request.prompt}])
+        messages = [
+            {'role': 'system', 'content': request.system_prompt},
+            {'role': 'user', 'content': request.prompt}
+        ]
+        response = ollama.chat(model='gemma2:2b', messages=messages)
         return {"response": response['message']['content']}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
+    print("Model personality: ", getSystemPrompt())
     uvicorn.run(app, host="0.0.0.0", port=8000)
