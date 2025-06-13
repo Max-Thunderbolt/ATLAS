@@ -26,7 +26,7 @@ class PromptRequest(BaseModel):
 
 @app.post("/chat")
 async def chat_with_gemma(request: PromptRequest):
-    print("System prompt: ", request.system_prompt)
+    print("Received request: ", request.prompt)
     try:
         # Assuming Ollama is running on the default host and port (http://localhost:11434)
         messages = [
@@ -34,11 +34,13 @@ async def chat_with_gemma(request: PromptRequest):
             {'role': 'user', 'content': request.prompt}
         ]
         response = ollama.chat(model='gemma2:2b', messages=messages)
+        if (response.message == None):
+            print("no response")
+            return {"response": "I'm sorry, I'm having trouble understanding you. Please try again."}
         return {"response": response['message']['content']}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
-    print("Model personality: ", getSystemPrompt())
     uvicorn.run(app, host="0.0.0.0", port=8000)
