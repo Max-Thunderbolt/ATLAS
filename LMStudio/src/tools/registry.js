@@ -2,6 +2,7 @@ import { readFile, writeFile, readdir, stat } from "fs/promises";
 import { join } from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { WebTools } from "./webTools.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -10,6 +11,7 @@ class ToolRegistry {
   constructor() {
     this.tools = new Map();
     this.categories = new Map();
+    this.webTools = new WebTools();
     this.loadBuiltInTools();
   }
 
@@ -270,19 +272,38 @@ class ToolRegistry {
 
   async webSearchHandler(parameters) {
     const { query, num_results = 5 } = parameters;
-    // This is a placeholder - you'd integrate with a real search API
-    return {
-      success: true,
-      query,
-      results: [
-        {
-          title: `Search results for: ${query}`,
-          url: "https://example.com",
-          snippet: "This is a placeholder search result...",
-        },
-      ],
-      count: 1,
-    };
+
+    try {
+      // Use the real WebTools implementation
+      const searchResults = await this.webTools.searchWeb(query, {
+        numResults: num_results,
+      });
+
+      return {
+        success: true,
+        query: searchResults.query,
+        results: searchResults.results,
+        count: searchResults.totalResults,
+        source: searchResults.source,
+        searchTime: searchResults.searchTime,
+      };
+    } catch (error) {
+      // Fallback to basic search if the real search fails
+      return {
+        success: false,
+        query,
+        error: error.message,
+        results: [
+          {
+            title: `Search for "${query}" on Google`,
+            url: `https://www.google.com/search?q=${encodeURIComponent(query)}`,
+            snippet: `Click to search for ${query} on Google`,
+          },
+        ],
+        count: 1,
+        source: "Fallback",
+      };
+    }
   }
 
   async fetchUrlHandler(parameters) {
