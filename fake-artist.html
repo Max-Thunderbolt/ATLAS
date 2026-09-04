@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fake Artist Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:active {
+            transform: scale(0.98);
+        }
+
+        .player-turn {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .player-number {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+
+        .role-reveal {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .role-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .imposter {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .artist {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .theme-info {
+            margin-top: 15px;
+        }
+
+        .theme-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .theme-value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .subject-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #856404;
+        }
+
+        .game-info {
+            background: #e8f4f8;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .info-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .hidden-content {
+            filter: blur(10px);
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .reveal-btn {
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 400px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .player-number {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Fake Artist Game</h1>
+        <p class="subtitle">Inspired by "A Fake Artist Goes to New York"</p>
+
+        <!-- Setup Screen -->
+        <div id="setupScreen" class="screen active">
+            <label for="playerCount">Number of Players:</label>
+            <input type="number" id="playerCount" min="3" max="20" value="4" placeholder="Enter number of players">
+            <button class="btn-primary" onclick="startGame()">Start Game</button>
+        </div>
+
+        <!-- Player Reveal Screen -->
+        <div id="revealScreen" class="screen">
+            <div class="player-turn">
+                <div>Player</div>
+                <div class="player-number" id="currentPlayerNumber"></div>
+            </div>
+
+            <div class="warning" id="passWarning">
+                🔒 Pass the device to Player <span id="nextPlayerNumber"></span>
+            </div>
+
+            <button class="btn-primary reveal-btn" id="revealBtn" onclick="revealRole()">Tap to See Your Role</button>
+
+            <div id="roleContent" class="hidden-content">
+                <div class="role-reveal" id="roleReveal">
+                    <div class="role-title" id="roleTitle"></div>
+                    <div class="theme-info" id="themeInfo"></div>
+                </div>
+            </div>
+
+            <button class="btn-secondary" id="nextBtn" style="display: none;" onclick="nextPlayer()">Done - Hide My Role</button>
+        </div>
+
+        <!-- Game Summary Screen -->
+        <div id="summaryScreen" class="screen">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #667eea;">🎮 Game Ready!</h2>
+            
+            <div class="game-info">
+                <div class="info-row">
+                    <span class="info-label">Players:</span>
+                    <span class="info-value" id="summaryPlayers"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Theme:</span>
+                    <span class="info-value" id="summaryTheme"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Subject:</span>
+                    <span class="info-value" id="summarySubject"></span>
+                </div>
+            </div>
+
+            <div class="warning">
+                ⚠️ One player is the fake artist and doesn't know the subject!
+            </div>
+
+            <button class="btn-primary" onclick="resetGame()">New Game</button>
+            <button class="btn-secondary" onclick="showRoles()">Review Roles</button>
+        </div>
+    </div>
+
+    <script>
+        // Game data
+        const themes = {
+            "Animals": ["Cat", "Dog", "Elephant", "Giraffe", "Penguin", "Butterfly", "Fish", "Bird", "Horse", "Rabbit"],
+            "Food": ["Pizza", "Burger", "Ice Cream", "Sushi", "Banana", "Apple", "Cake", "Cookie", "Hot Dog", "Sandwich"],
+            "Transportation": ["Car", "Airplane", "Bicycle", "Train", "Boat", "Helicopter", "Motorcycle", "Bus", "Rocket", "Skateboard"],
+            "Nature": ["Tree", "Flower", "Mountain", "Cloud", "Sun", "Moon", "Star", "Rainbow", "Ocean", "River"],
+            "Objects": ["Chair", "Table", "Clock", "Phone", "Book", "Lamp", "Cup", "Bottle", "Key", "Umbrella"],
+            "Buildings": ["House", "Castle", "School", "Church", "Bridge", "Tower", "Lighthouse", "Barn", "Temple", "Windmill"],
+            "Sports": ["Soccer Ball", "Basketball", "Tennis Racket", "Baseball Bat", "Golf Club", "Skateboard", "Skis", "Surfboard", "Hockey Stick", "Football"],
+            "People": ["Doctor", "Teacher", "Chef", "Police Officer", "Firefighter", "Astronaut", "Dancer", "Singer", "Artist", "Athlete"],
+            "Clothing": ["Hat", "Shirt", "Shoes", "Dress", "Jacket", "Pants", "Socks", "Gloves", "Scarf", "Tie"],
+            "Music": ["Guitar", "Piano", "Drum", "Violin", "Trumpet", "Flute", "Microphone", "Headphones", "Music Note", "Speaker"]
+        };
+
+        let gameState = {
+            playerCount: 0,
+            currentPlayer: 1,
+            imposterNumber: 0,
+            theme: "",
+            subject: "",
+            revealed: false
+        };
+
+        function startGame() {
+            const playerCount = parseInt(document.getElementById('playerCount').value);
+            
+            if (playerCount < 3) {
+                alert('Need at least 3 players!');
+                return;
+            }
+
+            // Initialize game
+            gameState.playerCount = playerCount;
+            gameState.currentPlayer = 1;
+            gameState.imposterNumber = Math.floor(Math.random() * playerCount) + 1;
+            
+            // Select random theme and subject
+            const themeKeys = Object.keys(themes);
+            gameState.theme = themeKeys[Math.floor(Math.random() * themeKeys.length)];
+            const subjects = themes[gameState.theme];
+            gameState.subject = subjects[Math.floor(Math.random() * subjects.length)];
+            gameState.revealed = false;
+
+            // Show reveal screen
+            showScreen('revealScreen');
+            updatePlayerDisplay();
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function updatePlayerDisplay() {
+            document.getElementById('currentPlayerNumber').textContent = gameState.currentPlayer;
+            document.getElementById('nextPlayerNumber').textContent = gameState.currentPlayer;
+            document.getElementById('roleContent').classList.add('hidden-content');
+            document.getElementById('revealBtn').style.display = 'block';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('passWarning').style.display = 'block';
+        }
+
+        function revealRole() {
+            const isImposter = gameState.currentPlayer === gameState.imposterNumber;
+            const roleReveal = document.getElementById('roleReveal');
+            const roleTitle = document.getElementById('roleTitle');
+            const themeInfo = document.getElementById('themeInfo');
+
+            if (isImposter) {
+                roleReveal.className = 'role-reveal imposter';
+                roleTitle.textContent = '🎭 You are the FAKE ARTIST!';
+                themeInfo.innerHTML = `
+                    <div class="theme-label">You only know the theme:</div>
+                    <div class="theme-value">${gameState.theme}</div>
+                    <div style="margin-top: 20px; font-size: 16px; opacity: 0.9;">
+                        Try to blend in without knowing what to draw!
+                    </div>
+                `;
+            } else {
+                roleReveal.className = 'role-reveal artist';
+                roleTitle.textContent = '🎨 You are a REAL ARTIST!';
+                themeInfo.innerHTML = `
+                    <div class="theme-label">Theme:</div>
+                    <div class="theme-value">${gameState.theme}</div>
+                    <div class="theme-label" style="margin-top: 15px;">Draw this:</div>
+                    <div class="subject-value">${gameState.subject}</div>
+                `;
+            }
+
+            document.getElementById('roleContent').classList.remove('hidden-content');
+            document.getElementById('revealBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'block';
+            document.getElementById('passWarning').style.display = 'none';
+        }
+
+        function nextPlayer() {
+            gameState.currentPlayer++;
+            
+            if (gameState.currentPlayer > gameState.playerCount) {
+                showSummary();
+            } else {
+                updatePlayerDisplay();
+            }
+        }
+
+        function showSummary() {
+            document.getElementById('summaryPlayers').textContent = gameState.playerCount;
+            document.getElementById('summaryTheme').textContent = gameState.theme;
+            document.getElementById('summarySubject').textContent = gameState.subject;
+            showScreen('summaryScreen');
+        }
+
+        function showRoles() {
+            gameState.currentPlayer = 1;
+            showScreen('revealScreen');
+            updatePlayerDisplay();
+        }
+
+        function resetGame() {
+            gameState = {
+                playerCount: 0,
+                currentPlayer: 1,
+                imposterNumber: 0,
+                theme: "",
+                subject: "",
+                revealed: false
+            };
+            showScreen('setupScreen');
+        }
+    </script>
+</body>
+</html>
